@@ -1,0 +1,48 @@
+services:
+  wp-web:
+    image: anymus/lagoon-wp:latest
+    restart: always
+    ports:
+    - 3000:80
+    environment:
+      WORDPRESS_DB_HOST: wp-db
+      WORDPRESS_DB_USER: "${DB_USERNAME}"
+      WORDPRESS_DB_PASSWORD: "${DB_USER_PASSWORD}"
+      WORDPRESS_DB_NAME: "${WP_DB_NAME}"
+      WORDPRESS_CONFIG_EXTRA: |
+        /* REDIS */
+        define( 'WP_REDIS_HOST', 'wp-redis' );
+        define( 'WP_REDIS_PORT', 6379 );
+    volumes:
+      - wp-web-vol:/var/www/html
+    networks:
+      - wp-net
+  
+  wp-db:
+    image: mariadb:latest
+    restart: always
+    environment:
+      MARIADB_USER: "${DB_USERNAME}"
+      MARIADB_PASSWORD: "${DB_USER_PASSWORD}"
+      MARIADB_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
+      MARIADB_DATABASE: "${WP_DB_NAME}"
+    volumes:
+      - wp-db-vol:/var/lib/mysql
+    networks:
+      - wp-net
+  
+  wp-redis:
+    image: redis:latest
+    restart: always
+    command: redis-server
+    volumes:
+      - wp-redis-vol:/data
+    networks:
+      - wp-net
+
+volumes:
+  wp-web-vol:
+  wp-db-vol:
+  wp-redis-vol:
+networks:
+  wp-net:
